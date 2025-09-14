@@ -20,13 +20,13 @@
         :disabled="isLoading"
       />
       <button @click="callGeminiAPI" :disabled="isLoading">
-        <span v-if="isLoading">응답 받는 중...</span>
+        <span v-if="isLoading">변경중...</span>
         <span v-else>보내기</span>
       </button>
     </div>
 
     <div class="example-prompts">
-      <p>이렇게 요청해보세요:</p>
+      <p>ex : 이렇게 요청해보세요:</p>
       <ul>
         <li v-for="example in examplePrompts" :key="example">
           <button @click="runExamplePrompt(example)" :disabled="isLoading">{{ example }}</button>
@@ -63,7 +63,8 @@ const examplePrompts = [
   '바다처럼 시원한 느낌으로 UI를 변경해줘',
   '따뜻한 오렌지 계열 색상으로 바꿔줘',
   '숲속처럼 편안한 녹색 테마로 만들어줘',
-  '미래적인 사이버펑크 스타일로 UI를 꾸며줘'
+  '배경은 연노랑에 버튼은 핑크색으로',
+  '전체적으로 남보라 분위기에 버튼은 눈에 띄게'
 ];
 
 const runExamplePrompt = (example) => {
@@ -217,11 +218,12 @@ input[type="text"] {
 }
 
 input {
-  width: 70%;
+  width: 60%;
   flex-grow: 1;
 }
 
 button {
+  min-width: 96px;
   padding: 10px 20px;
   background-color: var(--buttonBackgroundColor, #42b983);
   color: var(--buttonColor, #fff);
