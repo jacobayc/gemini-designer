@@ -18,16 +18,26 @@ const chatWithEnvRef = ref(null);
 const newsData = ref([]);
 
 const handleHeadlinesUpdated = (headlines) => {
+  // 1. 뉴스 데이터 상태 업데이트
   newsData.value = headlines;
+  // 2. 받아온 데이터를 세션 스토리지에 저장
+  sessionStorage.setItem('ai-news-headlines', JSON.stringify(headlines));
 };
 
 onMounted(() => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth() + 1;
-  const day = today.getDate();
-  const formattedDate = `${year}년 ${month}월 ${day}일`;
-  chatWithEnvRef.value?.runExamplePrompt(`${formattedDate} 뉴스 헤드라인 알려줘`);
+  const storedHeadlines = sessionStorage.getItem('ai-news-headlines');
+  if (storedHeadlines) {
+    // 세션 스토리지에 데이터가 있으면 그것을 사용
+    newsData.value = JSON.parse(storedHeadlines);
+  } else {
+    // 데이터가 없으면 API 호출
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const formattedDate = `${year}년 ${month}월 ${day}일`;
+    chatWithEnvRef.value?.runExamplePrompt(`${formattedDate} 뉴스 헤드라인 알려줘`);
+  }
 });
 </script>
 

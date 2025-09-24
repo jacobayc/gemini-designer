@@ -8,9 +8,6 @@
       <div  class="response-box">
         <p>테마를 변경했습니다. 마음에 드시나요?</p>
       </div>
-      <!-- <div v-else class="placeholder-text">
-        <p>무엇을 도와드릴까요?</p>
-      </div> -->
     </div>
     <div v-else class="chat-area" style="color: red;">
       <p>테마 변경을 위한 질문을 해주세요.</p>
@@ -111,11 +108,11 @@ const callGeminiAPI = async () => {
             - 웹사이트 스타일을 변경하는 JSON 객체를 생성합니다.
             - JSON 객체에는 색상 값과 함께 요청된 분위기에 맞는 배경 이미지 URL('backgroundImageUrl')을 포함해야 합니다.
             - 이미지 URL은 Unsplash Source API를 사용해야 합니다. (예: https://source.unsplash.com/1600x900/?<keywords>)
-            - JSON 형식: {"type": "ui-change", "data": {"backgroundColor": "#...", "color": "#...", "containerBackgroundColor": "rgba(255, 255, 255, 0.8)", "chatAreaBackgroundColor": "#...", "chatAreaColor": "#...", "buttonBackgroundColor": "#...", "buttonColor": "#...", "buttonHoverBackgroundColor": "#..."}}
+            - JSON 형식: {"type": "ui-change", "data": {"backgroundColor": "#...", "color": "#...", "containerBackgroundColor": "#...", "chatAreaBackgroundColor": "#...", "chatAreaColor": "#...", "buttonBackgroundColor": "#...", "buttonColor": "#...", "buttonHoverBackgroundColor": "#..."}}
 
             2. 뉴스 헤드라인 요청 (예: "오늘의 헤드라인 알려줘"):
             - 오늘 날짜에 맞는 헤드라인으로 포함해야 합니다.
-            - 정치/사회, 경제/산업, 국제 관련 분야의 뉴스 헤드라인 최소 10개를 포함하는 JSON 객체를 생성합니다.
+            - 정치/사회, 경제/산업, 국제, 스포츠, IT/과학 관련 분야의 뉴스 헤드라인 최소 10개를 포함하는 JSON 객체를 생성합니다.
             - 각 헤드라인은 'categories', 'title', 'contents' 필드를 포함해야 합니다.
             - JSON 형식: {"type": "news-headlines", "data": [{"id": 1, "categories": "정치/사회", "title": "...", "contents": "..."}, ...]}
 
@@ -213,21 +210,104 @@ defineExpose({ runExamplePrompt });
   box-sizing: border-box;
   background-color: var(--containerBackgroundColor, #f9f9f9); /* 변수 적용, 기본값 설정 */
   color: var(--color, #333); /* 변수 적용, 기본값 설정 */
-}
-h1 {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 30px;
-  .toggle {
-    width: 40px;
-    height: 20px;
-    background:Red;
-    position: static;
-    background: none;
-    font-size: 16px;
-    color: salmon;
-    cursor: pointer;
+  h1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 30px;
+    .toggle {
+      width: 40px;
+      height: 20px;
+      background:Red;
+      position: static;
+      background: none;
+      font-size: 16px;
+      color: salmon;
+      cursor: pointer;
+    }
+  }
+  .chat-area {
+    min-height: 50px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    background-color: var(--chatAreaBackgroundColor, #fff); /* 변수 적용 */
+    margin-bottom: 20px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    word-break: break-word;
+    .response-box {
+      &>p {
+        line-height: 1.6;
+        color: var(--chatAreaColor, #555); /* 변수 적용 */
+      }
+    }
+  }
+  .input-area {
+    display: flex;
+    gap: 10px;
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    input {
+      width: 60%;
+      flex-grow: 1;
+    }
+    button {
+      min-width: 96px;
+      padding: 10px 20px;
+      background-color: var(--buttonBackgroundColor, #42b983);
+      color: var(--buttonColor, #fff);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      &:disabled {
+        background-color: #a0a0a0;
+        cursor: not-allowed;
+      }
+      &:hover:not(:disabled) {
+        background-color: var(--buttonHoverBackgroundColor, #369c67);
+      }
+    }
+  }
+  .error-message {
+    color: #e53935;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .example-prompts {
+    margin-top: 20px;
+    text-align: left;
+    &>p {
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 10px;
+      font-size: 0.9em;
+    }
+    &> ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      &> button {
+        background-color: #f0f0f0;
+        color: #333;
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        border-radius: 20px; /* rounded buttons */
+        font-size: 0.9em;
+        &:hover:not(:disabled) {
+          background-color: #e0e0e0;
+          border-color: #ccc;
+        }
+      }
+    }
   }
 }
 
@@ -252,109 +332,93 @@ h1 {
 }
 
 
-h2 {
-  text-align: center;
-  color: #333;
-}
-
-.chat-area {
-  min-height: 50px;
-  padding: 15px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  background-color: var(--chatAreaBackgroundColor, #fff); /* 변수 적용 */
-  margin-bottom: 20px;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.response-box p {
-  line-height: 1.6;
-  color: var(--chatAreaColor, #555); /* 변수 적용 */
-}
-
-.placeholder-text {
-  color: var(--chatAreaColor, #aaa); /* 변수 적용 */
-  text-align: center;
-  margin-top: 50px;
-}
-
-.input-area {
-  display: flex;
-  gap: 10px;
-}
-
-input[type="text"] {
-  flex-grow: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-input {
-  width: 60%;
-  flex-grow: 1;
-}
-
-button {
-  min-width: 96px;
-  padding: 10px 20px;
-  background-color: var(--buttonBackgroundColor, #42b983);
-  color: var(--buttonColor, #fff);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover:not(:disabled) {
-  background-color: var(--buttonHoverBackgroundColor, #369c67);
-}
-
-button:disabled {
-  background-color: #a0a0a0;
-  cursor: not-allowed;
-}
-
-.error-message {
-  color: #e53935;
-  margin-top: 10px;
-  text-align: center;
-}
-
-.example-prompts {
-  margin-top: 20px;
-  text-align: left;
-}
-
-.example-prompts p {
-  font-weight: bold;
-  color: #555;
-  margin-bottom: 10px;
-  font-size: 0.9em;
-}
-
-.example-prompts ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.example-prompts button {
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  border-radius: 20px; /* rounded buttons */
-  font-size: 0.9em;
-}
-
-.example-prompts button:hover:not(:disabled) {
-  background-color: #e0e0e0;
-  border-color: #ccc;
+@media screen and (max-width: 768px) {
+  .gemini-chat-container {
+    width: 300px;
+    height: auto;
+    max-height: 450px;
+    h1 {
+      font-size: 20px;
+      .toggle {
+      }
+    }
+    .chat-area {
+      min-height: 20px;
+      padding: 5px;
+      margin-bottom: 10px;
+      .response-box {
+        &>p {
+          margin: 0;
+          font-size: 14px;
+        }
+      }
+      &>p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+    .input-area {
+      display: flex;
+      gap: 10px;
+      input[type="text"] {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      input {
+        width: 60%;
+        flex-grow: 1;
+      }
+      button {
+        min-width: 96px;
+        padding: 10px 20px;
+        background-color: var(--buttonBackgroundColor, #42b983);
+        color: var(--buttonColor, #fff);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        font-size: 12px;
+        &:disabled {
+          background-color: #a0a0a0;
+          cursor: not-allowed;
+        }
+        &:hover:not(:disabled) {
+          background-color: var(--buttonHoverBackgroundColor, #369c67);
+        }
+      }
+    }
+    .example-prompts {
+      margin-top: 10px;
+      &> ul {
+        gap: 5px;
+        li {
+          &> button {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 20px; /* rounded buttons */
+            font-size: 0.7em;
+            &:hover:not(:disabled) {
+              background-color: #e0e0e0;
+              border-color: #ccc;
+            }
+          }
+        }
+      }
+    }
+  }
+  .gemini-chat-container.closed {
+    max-width: 120px;
+    top: -40px;
+    right: 2px;
+    h1 {
+      padding-left:0px;
+      font-size: 12px;
+      margin-top: -10px;
+    }
+  }
 }
 </style>
