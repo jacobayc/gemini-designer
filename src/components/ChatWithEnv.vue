@@ -1,22 +1,26 @@
 <template>
-  <div class="gemini-chat-container">
-    <div class="chat-area">
-      <div v-if="isUiChange" class="response-box">
-        <p>당신의 요청에 맞춰 디자인을 변경했습니다!</p>
-      </div>
-      <div v-else class="response-box">
-        <p>UI 변경 요청이 아닙니다. UI/UX 변경을 위한 질문을 해주세요.</p>
+  <div class="gemini-chat-container" :class="{ 'closed': !isChatOpen }">
+    <h1>
+      실시간 UI 테마 변경
+      <div class="toggle" @click="toggleChat"> {{ isChatOpen ? '닫기' : '' }} </div>
+    </h1>
+    <div class="chat-area" v-if="isUiChange">
+      <div  class="response-box">
+        <p>테마를 변경했습니다. 마음에 드시나요?</p>
       </div>
       <!-- <div v-else class="placeholder-text">
         <p>무엇을 도와드릴까요?</p>
       </div> -->
     </div>
-
+    <div v-else class="chat-area" style="color: red;">
+      <p>테마 변경을 위한 질문을 해주세요.</p>
+    </div>
+    
     <div class="input-area">
       <input
         v-model="prompt"
         @keyup.enter="callGeminiAPI"
-        placeholder="디자인 변경을 요청해보세요..."
+        placeholder="어떤 분위기를 좋아하세요..."
         :disabled="isLoading"
       />
       <button @click="callGeminiAPI" :disabled="isLoading">
@@ -58,13 +62,23 @@ const error = ref(null);
 const uiResponse = ref(null); 
 const isUiChange = ref(false);
 
+const emit = defineEmits(['headlines-updated']);
+
+const isChatOpen = ref(false); // 채팅창 열림/닫힘 상태
+
+const toggleChat = () => {
+  isChatOpen.value = !isChatOpen.value;
+  isUiChange.value = false; // UI 변경 상태 초기화
+};
+
 const examplePrompts = [
-  '어두운 다크 모드로 변경해줘',
-  '바다처럼 시원한 느낌으로 UI를 변경해줘',
-  '따뜻한 오렌지 계열 색상으로 바꿔줘',
-  '숲속처럼 편안한 녹색 테마로 만들어줘',
-  '배경은 연노랑에 버튼은 핑크색으로',
-  '전체적으로 남보라 분위기에 버튼은 눈에 띄게'
+  '어두운 다크 모드',
+  '시원한 바다 느낌',
+  '따뜻한 오렌지',
+  '편안함을 주는 녹색 숲',
+  '미래적인 사이버펑크 도시의 밤',
+  '조용한 새벽녘의 안개 낀 호수',
+  '활기찬 여름 축제'
 ];
 
 const runExamplePrompt = (example) => {
@@ -91,11 +105,22 @@ const callGeminiAPI = async () => {
         parts: [{
           // AI에게 JSON 응답을 요청하는 시스템 프롬프트
           text: `
-            사용자의 요청에 따라 웹사이트의 스타일을 변경하는 JSON 객체를 생성하세요.
-            요청이 UI 변경과 관련 없을 경우, "UI 변경 요청이 아닙니다. UI/UX 변경을 위한 질문을 해주세요."라고 응답하세요.
-            
-            JSON 형식 예시:
-             {"type": "ui-change", "data": {"backgroundColor": "#...", "color": "#...", "containerBackgroundColor": "#...", "chatAreaBackgroundColor": "#...", "chatAreaColor": "#...", "buttonBackgroundColor": "#...", "buttonColor": "#...", "buttonHoverBackgroundColor": "#..."}}
+            사용자의 요청을 분석해서 'ui-change' 또는 'news-headlines' 타입의 JSON으로 응답하세요.
+
+            1. UI 변경 요청 (예: "어두운 다크 모드"):
+            - 웹사이트 스타일을 변경하는 JSON 객체를 생성합니다.
+            - JSON 객체에는 색상 값과 함께 요청된 분위기에 맞는 배경 이미지 URL('backgroundImageUrl')을 포함해야 합니다.
+            - 이미지 URL은 Unsplash Source API를 사용해야 합니다. (예: https://source.unsplash.com/1600x900/?<keywords>)
+            - JSON 형식: {"type": "ui-change", "data": {"backgroundColor": "#...", "color": "#...", "containerBackgroundColor": "rgba(255, 255, 255, 0.8)", "chatAreaBackgroundColor": "#...", "chatAreaColor": "#...", "buttonBackgroundColor": "#...", "buttonColor": "#...", "buttonHoverBackgroundColor": "#..."}}
+
+            2. 뉴스 헤드라인 요청 (예: "오늘의 헤드라인 알려줘"):
+            - 오늘 날짜에 맞는 헤드라인으로 포함해야 합니다.
+            - 정치/사회, 경제/산업, 국제 관련 분야의 뉴스 헤드라인 최소 10개를 포함하는 JSON 객체를 생성합니다.
+            - 각 헤드라인은 'categories', 'title', 'contents' 필드를 포함해야 합니다.
+            - JSON 형식: {"type": "news-headlines", "data": [{"id": 1, "categories": "정치/사회", "title": "...", "contents": "..."}, ...]}
+
+            3. 위 두 가지에 해당하지 않는 경우:
+            - 일반 텍스트로 답변하세요.
 
             사용자 요청: ${prompt.value}
           `
@@ -119,6 +144,10 @@ const callGeminiAPI = async () => {
           uiResponse.value = parsed.data;
           response.value = null; // UI 변경 완료 메시지는 템플릿에서 직접 처리
           applyStyles(uiResponse.value); // 스타일 적용 함수 호출
+        } else if (parsed.type === 'news-headlines' && parsed.data) {
+          emit('headlines-updated', parsed.data);
+          isUiChange.value = false;
+          response.value = null; // 뉴스 요청은 채팅창에 표시하지 않음
         } else {
           // JSON 형식은 맞지만 'ui-change' 타입이 아닐 경우
           isUiChange.value = false;
@@ -149,33 +178,79 @@ const callGeminiAPI = async () => {
 // JSON 응답을 받아 CSS 변수(Custom Properties)에 적용하는 함수
 const applyStyles = (styles) => {
   const rootElement = document.documentElement; // HTML의 :root 선택
+
+  // 나머지 스타일은 CSS 변수로 :root에 적용
   for (const key in styles) {
-    if (styles[key]) {
-      // --backgroundColor, --color 등으로 CSS 변수 설정
+    if (key !== 'backgroundImageUrl' && styles.hasOwnProperty(key) && styles[key]) {
       rootElement.style.setProperty(`--${key}`, styles[key]);
     }
   }
 };
+
+defineExpose({ runExamplePrompt });
+
 </script>
 
-<style scoped>
-/* 이전 예제와 동일한 스타일 */
+<style scoped lang="less">
+
 .gemini-chat-container {
+  position: fixed;
+  right: 20px;
+  top: 0;
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
-  width: 90%;
+  max-width: 420px;
+  width: 80%;
+  height: 520px;
   margin: 40px auto;
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-family: Arial, sans-serif;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  /* background-color: #f9f9f9; */
-  /* background: orange; */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+  box-sizing: border-box;
   background-color: var(--containerBackgroundColor, #f9f9f9); /* 변수 적용, 기본값 설정 */
   color: var(--color, #333); /* 변수 적용, 기본값 설정 */
 }
+h1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 30px;
+  .toggle {
+    width: 40px;
+    height: 20px;
+    background:Red;
+    position: static;
+    background: none;
+    font-size: 16px;
+    color: salmon;
+    cursor: pointer;
+  }
+}
+
+.gemini-chat-container.closed {
+  max-width: 220px;
+  height: 40px;
+  cursor: pointer;
+  top: -30px;
+  right: 5px;
+  h1 {
+    padding-left:25px;
+    font-size: 16px;
+    margin-top: -5px;
+    .toggle {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top:0;
+      left: 0;
+    }
+  }
+}
+
 
 h2 {
   text-align: center;
